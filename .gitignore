@@ -1,4 +1,5 @@
 *.py
 py-sc-client/
 get_function
+.env
 
