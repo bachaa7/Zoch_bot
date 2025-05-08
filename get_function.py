@@ -36,4 +36,5 @@
 
 #     except Exception as e:
 #         await message.answer(f"🚫 Ошибка при получении определения: {e}")
-#fd
+#gfdgdg
+#gddg
