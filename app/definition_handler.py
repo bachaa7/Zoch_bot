@@ -1,6 +1,5 @@
 from aiogram import Router
 from aiogram.types import Message
-
 from sc_kpm import ScKeynodes
 from sc_kpm.utils import search_element_by_role_relation, get_link_content_data
 from sc_client.constants import sc_types

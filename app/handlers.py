@@ -8,6 +8,9 @@ from aiogram import types
 from app.keyboards import DefinitionCallbackFactory
 from app.keyboards import definitions_keyboard
 from add_defiition import add_definition_to_concept
+from app.keyboards import add_concept_button
+from app.keyboards import concept_button
+from app.keyboards import concept_lookup_button
 
 import app.keyboards as kb
 
@@ -53,7 +56,7 @@ async def Kovalchyk(callback: CallbackQuery):
 # Callback для выбора Черетука
 @router.callback_query(F.data == 'Cheretyk')
 async def Cheretyk(callback: CallbackQuery):
-    await callback.answer("Вы выбрали черта", show_alert=True)
+    await callback.answer("Вы выбрали Тимофея", show_alert=True)
     await callback.message.answer("Черетун - Минский Messi.")
 
 
@@ -78,6 +81,9 @@ async def about_us(message: Message):
 async def calculate_calories(callback: CallbackQuery):
     await callback.answer("Вы выбрали рассчитать калории ", show_alert=True)
     await callback.message.answer("Функция расчета калорий пока не реализована.")
+
+
+
 
 
 # Регистрация пользователя
@@ -117,7 +123,6 @@ async def register_number(message: Message, state: FSMContext):
 async def send_recommend_menu_inline(callback: CallbackQuery):
     await callback.message.answer("Выберите категорию рекомендаций 👇", reply_markup=kb.recommend_keyboard)
     await callback.answer()
-
 
 @router.callback_query(F.data == "food_recommend")
 async def food_recommend(callback: CallbackQuery):
@@ -162,13 +167,13 @@ async def habits_recommend(callback: CallbackQuery):
 
 
 
+
 @router.callback_query(lambda c: c.data == "show_concepts")
 async def show_concepts(callback: types.CallbackQuery):
     await callback.message.edit_text("Выберите понятие:", reply_markup=definitions_keyboard())
     await callback.answer()
 
 
-from app.keyboards import concept_button
 
 @router.message(F.text.lower() == "понятия")
 async def send_concept_button(message: Message):
@@ -176,8 +181,6 @@ async def send_concept_button(message: Message):
 
 
 
-
-from app.keyboards import add_concept_button
 
 
 class AddConceptStates(StatesGroup):
@@ -232,10 +235,6 @@ async def show_add_definition_inline(callback: CallbackQuery):
 
 
 
-
-
-
-from app.keyboards import concept_lookup_button
 
 class LookupConcept(StatesGroup):
     waiting_for_idtf = State()
