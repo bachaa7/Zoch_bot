@@ -5,16 +5,31 @@ from aiogram.types import (
     InlineKeyboardMarkup
 )
 
+from aiogram.filters.callback_data import CallbackData
+
+
+
+
+class DefinitionCallbackFactory(CallbackData, prefix="definition"):
+    concept_idtf: str
+
+
+
 # Основная клавиатура
 main = ReplyKeyboardMarkup(
     keyboard=[
         [
-         KeyboardButton(text='Функционал'),
-         KeyboardButton(text='Рекомендации')
+         KeyboardButton(text='Функционал')
+         #KeyboardButton(text='Рекомендации')
         ],
+        # [
+        #  KeyboardButton(text="Поиск определения"),
+        #  KeyboardButton(text='Добавить понятие')
+        # ],
         [
-            KeyboardButton(text='Контакты'),
-            KeyboardButton(text='о нас')
+            KeyboardButton(text='о нас'),
+            KeyboardButton(text='о системе')
+            #KeyboardButton(text='Понятия')
         ]
     ],
     resize_keyboard=True,
@@ -26,7 +41,7 @@ main = ReplyKeyboardMarkup(
 about_us = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="Казаченко", callback_data='Kazachenka')],
-        [InlineKeyboardButton(text="Черетук", callback_data='Cheretyk')],
+        [InlineKeyboardButton(text="Черетун", callback_data='Cheretyk')],
         [InlineKeyboardButton(text='Ковальчук', callback_data='Kovalchyk')]
     ]
 )
@@ -45,7 +60,9 @@ get_number = ReplyKeyboardMarkup(
 fuction_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="Рассчитать калории ", callback_data='calculate_calories')],
-        [InlineKeyboardButton(text="Мои данные", callback_data='my_data')]
+        [InlineKeyboardButton(text='Рекомендации',callback_data='recomendation')],
+        [InlineKeyboardButton(text="Поиск определения",callback_data='found_defenition')],
+        [InlineKeyboardButton(text='Добавить понятие',callback_data='add_defenition')]
     ]
 )
 
@@ -55,3 +72,54 @@ recommend_keyboard = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="🌿 Полезные привычки", callback_data='habits_recommend')]
     ]
 )
+
+def definitions_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="Личная гигиена",
+                callback_data=DefinitionCallbackFactory(concept_idtf="1_личная гигиена").json()  # Используем метод json()
+            )],
+            [InlineKeyboardButton(
+                text="Психическое здоровье",
+                callback_data=DefinitionCallbackFactory(concept_idtf="1_психическое здоровье").json()  # Используем метод json()
+            )],
+
+
+                        [
+                InlineKeyboardButton(
+                    text="Тимоха",  # ➕ Новое понятие
+                    callback_data=DefinitionCallbackFactory(concept_idtf="Timoha").json()
+                )
+            ]
+
+        ]
+    )
+
+
+
+
+# Кнопка для вызова понятий
+def concept_button():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Выбрать понятие", callback_data="show_concepts")]
+        ]
+    )
+
+
+def add_concept_button():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="➕ Добавить понятие", callback_data="add_concept")]
+        ]
+    )
+
+
+
+
+
+def concept_lookup_button():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔍 Посмотреть определение", callback_data="lookup_definition")]
+    ])
