@@ -1,6 +1,6 @@
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command , StateFilter
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram import types
@@ -11,8 +11,11 @@ from add_defiition import add_definition_to_concept
 from app.keyboards import add_concept_button
 from app.keyboards import concept_button
 from app.keyboards import concept_lookup_button
+from app.calorie_calculator import *
 
 import app.keyboards as kb
+from app.reminder_instance import reminder_manager
+from app.reminder_instance import get_reminder_manager
 
 router = Router()
 
@@ -23,6 +26,19 @@ class Register(StatesGroup):
     number = State()
 
 
+class CalorieCalculation(StatesGroup):
+    age = State()
+    gender = State()
+    weight = State()
+    height = State()
+    activity_level = State()
+    goal = State()
+
+
+class ReminderStates(StatesGroup):
+    waiting_for_times = State()
+
+
 @router.message(CommandStart())  # Обработчик команды /start
 async def cmd_start(message: Message):
     await message.answer('Доброго времени суток', reply_markup=kb.main)
@@ -30,7 +46,7 @@ async def cmd_start(message: Message):
 
 @router.message(Command('help'))  # Обработчик команды /help
 async def cmd_help(message: Message):
-    await message.answer("Вы нажали на кнопку помощи. Если вы надеетесь на помощь,то это не зря.")
+    await message.answer("Вы нажали на кнопку помощи. Если у вас возникли какие-то проблемы, то можете связаться с нами walkyn9@gmail.com")
 
 
 
@@ -78,46 +94,178 @@ async def about_us(message: Message):
 
 # Обработчик callback для выбора "расчет калорий"
 @router.callback_query(F.data == 'calculate_calories')
-async def calculate_calories(callback: CallbackQuery):
-    await callback.answer("Вы выбрали рассчитать калории ", show_alert=True)
-    await callback.message.answer("Функция расчета калорий пока не реализована.")
+async def calculate_calories(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Введите ваш возраст:")
+    await state.set_state(CalorieCalculation.age.state)
 
 
+# Обработчик для ввода возраста
+@router.message(CalorieCalculation.age)
+async def get_age(message: Message, state: FSMContext):
+    try:
+        age = int(message.text)
+        if age <= 0:
+            raise ValueError("Возраст должен быть положительным числом.")
+        await state.update_data(age=age)
+        await message.answer("Введите ваш пол (M/W):")
+        await state.set_state(CalorieCalculation.gender.state)
+    except ValueError:
+        await message.answer("Пожалуйста, введите корректный возраст (целое положительное число).")
 
 
+# Обработчик для ввода пола
+@router.message(CalorieCalculation.gender)
+async def get_gender(message: Message, state: FSMContext):
+    gender = message.text.strip().lower()
+    if gender not in ['m', 'w']:
+        await message.answer("Пожалуйста, введите корректный пол (M или W).")
+        return
+    await state.update_data(gender=gender)
+    await message.answer("Введите ваш вес (кг):")
+    await state.set_state(CalorieCalculation.weight.state)
 
-# Регистрация пользователя
-@router.message(Command('register'))
-async def register(message: Message, state: FSMContext):
-    await state.set_state(Register.name)
-    await message.answer("Введите ваше Имя: ")
+# Обработчик для ввода веса
+@router.message(CalorieCalculation.weight)
+async def get_weight(message: Message, state: FSMContext):
+    try:
+        weight = float(message.text)
+        if weight <= 0:
+            raise ValueError("Вес должен быть положительным числом.")
+        await state.update_data(weight=weight)
+        await message.answer("Введите ваш рост (см):")
+        await state.set_state(CalorieCalculation.height.state)
+    except ValueError:
+        await message.answer("Пожалуйста, введите корректный вес (положительное число).")
+ 
 
-@router.message(Register.name)
-async def register_name(message: Message, state: FSMContext):
-    await state.update_data(name=message.text)
-    await state.set_state(Register.age)
-    await message.answer("Введите ваш возраст")
 
-@router.message(Register.age)
-async def register_age(message: Message, state: FSMContext):
-    await state.update_data(age=message.text)
-    await state.set_state(Register.number)
-    await message.answer("Отправьте ваш номер телефона", reply_markup=kb.get_number)
+# Обработчик для ввода роста
+@router.message(CalorieCalculation.height)
+async def get_height(message: Message, state: FSMContext):
+    try:
+        height = float(message.text)
+        if height <= 0:
+            raise ValueError("Рост должен быть положительным числом.")
+        await state.update_data(height=height)
+        await message.answer("Введите уровень активности (1 - низкий, 2 - средний, 3 - высокий):")
+        await state.set_state(CalorieCalculation.activity_level.state)
+    except ValueError:
+        await message.answer("Пожалуйста, введите корректный рост (положительное число).")
 
-@router.message(Register.number, F.contact)
-async def register_number(message: Message, state: FSMContext):
-    await state.update_data(number=message.contact.phone_number)
-    data = await state.get_data()
-    await message.answer(f"Ваше имя: {data['name']}\n Ваш возраст: {data['age']}\n Номер: {data['number']}")
+
+@router.message(CalorieCalculation.activity_level)
+async def get_activity_level(message: Message, state: FSMContext):
+    activity_level = int(message.text)
+    if activity_level < 1 or activity_level > 3:
+        raise ValueError("Уровень активности должен быть от 1 до 3.")
+    await state.update_data(activity_level=activity_level)
+    await message.answer('Введите вашу цель: похудение / набор / поддержание:')
+    await state.set_state(CalorieCalculation.goal.state)
+
+
+# Обработчик для ввода уровня активности
+@router.message(CalorieCalculation.goal)
+async def get_goal(message: Message, state: FSMContext):
+    goal = message.text.strip().lower()
+    await state.update_data(goal=goal)
+    user_data = await state.get_data()
+    age = user_data['age']
+    gender = user_data['gender']
+    weight = user_data['weight']
+    height = user_data['height']
+    activity_level = user_data['activity_level']
+
+    bmr = calculate_bmr(age, gender, weight, height)
+    calories = calculate_calories(bmr, activity_level)
+    adjusted = adjust_calories_for_goal(calories, goal)
+    bmi, classification = calculate_bmi(weight, height)
+    proteins, fats, carbs = calculate_macronutrients(adjusted, gender)
+
+    await message.answer(
+        f'Ваша суточная норма калорий для цели "{goal}": {adjusted:.2f} ккал\n'
+        f'Индекс массы тела (ИМТ): {bmi} — {classification}\n\n'
+        f'Рекомендуемое суточное потребление БЖУ:\n'
+        f'Белки: {proteins} г\n'
+        f'Жиры: {fats} г\n'
+        f'Углеводы: {carbs} г'
+    )
     await state.clear()
 
 
 
- 
-# Рекомендации
-# @router.message(F.text == "Рекомендации")
-# async def send_recommend_menu(message: Message):
-#     await message.answer("Выберите категорию рекомендаций 👇", reply_markup=kb.recommend_keyboard)
+
+# === Напоминания ===
+
+
+# Обработчик кнопки "Установить напоминания"
+@router.callback_query(F.data == 'set_reminders')
+async def start_reminder_menu(callback: CallbackQuery):
+    await callback.message.answer("Выберите тип напоминания:", reply_markup=kb.reminder_type_keyboard)
+    await callback.answer()
+
+# Обработчик выбора типа напоминания
+@router.callback_query(F.data.in_({"reminder_water", "reminder_sleep", "reminder_exercise"}))
+async def select_reminder_type(callback: CallbackQuery, state: FSMContext):
+    reminder_map = {
+        "reminder_water": "water",
+        "reminder_sleep": "sleep",
+        "reminder_exercise": "exercise"
+    }
+    reminder_type = reminder_map[callback.data]
+
+    await state.update_data(reminder_type=reminder_type)
+    await callback.message.answer(f"Введите время для напоминаний о {reminder_type} (например: 08:00 или 08:00, 22:00):")
+    await state.set_state(ReminderStates.waiting_for_times)
+    await callback.answer()
+
+
+
+
+# Обработчик ввода времени напоминаний
+@router.message(StateFilter(ReminderStates.waiting_for_times))
+async def set_reminder_times(message: Message, state: FSMContext):
+    data = await state.get_data()
+    reminder_type = data.get("reminder_type")
+    times = [t.strip() for t in message.text.split(",")]
+
+    chat_id = message.chat.id
+    try:
+        # Добавляем напоминания через ReminderManager
+        reminder_manager = get_reminder_manager()
+        reminder_manager.add_reminder(chat_id, reminder_type, times)
+        await message.answer(f"Напоминания о {reminder_type} установлены на: {', '.join(times)}")
+    except Exception as e:
+        await message.answer(f"Ошибка при установке напоминаний: {e}")
+
+    await state.clear()
+
+
+# # Регистрация пользователя
+# @router.message(Command('register'))
+# async def register(message: Message, state: FSMContext):
+#     await state.set_state(Register.name)
+#     await message.answer("Введите ваше Имя: ")
+
+# @router.message(Register.name)
+# async def register_name(message: Message, state: FSMContext):
+#     await state.update_data(name=message.text)
+#     await state.set_state(Register.age)
+#     await message.answer("Введите ваш возраст")
+
+# @router.message(Register.age)
+# async def register_age(message: Message, state: FSMContext):
+#     await state.update_data(age=message.text)
+#     await state.set_state(Register.number)
+#     await message.answer("Отправьте ваш номер телефона", reply_markup=kb.get_number)
+
+# @router.message(Register.number, F.contact)
+# async def register_number(message: Message, state: FSMContext):
+#     await state.update_data(number=message.contact.phone_number)
+#     data = await state.get_data()
+#     await message.answer(f"Ваше имя: {data['name']}\n Ваш возраст: {data['age']}\n Номер: {data['number']}")
+#     await state.clear()
+
+
 
 @router.callback_query(F.data == 'recomendation')
 async def send_recommend_menu_inline(callback: CallbackQuery):
@@ -224,9 +372,6 @@ async def process_definition(message: types.Message, state: FSMContext):
 
 
 
-# @router.message(F.text.lower() == "добавить понятие")
-# async def send_add_definition_button(message: Message):
-#     await message.answer("Нажмите кнопку ниже, чтобы добавить определение:", reply_markup=add_concept_button())
 
 @router.callback_query(F.data == 'add_defenition')
 async def show_add_definition_inline(callback: CallbackQuery):
@@ -236,20 +381,35 @@ async def show_add_definition_inline(callback: CallbackQuery):
 
 
 
-class LookupConcept(StatesGroup):
-    waiting_for_idtf = State()
 
-# @router.message(F.text.lower() == "поиск определения")
-# async def ask_for_concept(message: Message, state: FSMContext):
-#     await message.answer("Нажмите кнопку ниже для поиска определения:", reply_markup=concept_lookup_button())
+
+
+
+from app.definition_handler import get_definition_command
 
 @router.callback_query(F.data == 'found_defenition')
 async def show_lookup_definition_inline(callback: CallbackQuery):
-    await callback.message.answer("Нажмите кнопку ниже для поиска определения:", reply_markup=kb.concept_lookup_button())
+    await callback.message.answer(
+        "Выберите понятие для просмотра определения:",
+        reply_markup=kb.definitions_keyboard()  # Показываем кнопки с понятиями
+    )
     await callback.answer()
 
-@router.callback_query(F.data == "lookup_definition")
-async def start_lookup(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Введите /define идентификатор понятия, определение которого вы хотите увидеть:")
-    await state.set_state(LookupConcept.waiting_for_idtf)
+# Новый обработчик для кнопок определений
+@router.callback_query(F.data.startswith("define_"))
+async def handle_definition_button(callback: CallbackQuery):
+    # Извлекаем идентификатор из callback_data
+    concept_id = callback.data.replace("define_", "")
+    
+    # Формируем "виртуальное" сообщение с командой /define
+    class FakeMessage:
+        def __init__(self, text):
+            self.text = text
+            self.answer = callback.message.answer
+    
+    # Создаем фейковое сообщение с командой
+    fake_msg = FakeMessage(f"/define {concept_id}")
+    
+    # Вызываем ваш существующий обработчик команд
+    await get_definition_command(fake_msg)
     await callback.answer()

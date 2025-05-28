@@ -59,12 +59,23 @@ get_number = ReplyKeyboardMarkup(
 # Клавиатура функционала
 fuction_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Рассчитать калории ", callback_data='calculate_calories')],
+        [InlineKeyboardButton(text="Рассчитать КБЖУ ", callback_data='calculate_calories')],
+        [InlineKeyboardButton(text="Установить напоминание", callback_data='set_reminders')],
         [InlineKeyboardButton(text='Рекомендации',callback_data='recomendation')],
         [InlineKeyboardButton(text="Поиск определения",callback_data='found_defenition')],
         [InlineKeyboardButton(text='Добавить понятие',callback_data='add_defenition')]
     ]
 )
+
+
+
+reminder_type_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="💧 Вода", callback_data="reminder_water")],
+    [InlineKeyboardButton(text="🌙 Сон", callback_data="reminder_sleep")],
+    [InlineKeyboardButton(text="🏃 Упражнения", callback_data="reminder_exercise")]
+])
+
+
 
 recommend_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -72,29 +83,6 @@ recommend_keyboard = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="🌿 Полезные привычки", callback_data='habits_recommend')]
     ]
 )
-
-def definitions_keyboard():
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(
-                text="Личная гигиена",
-                callback_data=DefinitionCallbackFactory(concept_idtf="1_личная гигиена").json()  # Используем метод json()
-            )],
-            [InlineKeyboardButton(
-                text="Психическое здоровье",
-                callback_data=DefinitionCallbackFactory(concept_idtf="1_психическое здоровье").json()  # Используем метод json()
-            )],
-
-
-                        [
-                InlineKeyboardButton(
-                    text="Тимоха",  # ➕ Новое понятие
-                    callback_data=DefinitionCallbackFactory(concept_idtf="Timoha").json()
-                )
-            ]
-
-        ]
-    )
 
 
 
@@ -119,7 +107,66 @@ def add_concept_button():
 
 
 
+
+def definitions_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="Рекомендация по питанию",
+                callback_data="define_food_recomend" 
+            )],
+            [InlineKeyboardButton(
+                text="Личная гигиена",
+                callback_data="define_personal_hygiene"
+            )],
+
+            [InlineKeyboardButton(
+                text="Избежание вредных привычек",
+                callback_data="define_nrel_avoidance_of_bad_habits"
+            )],
+            
+            [InlineKeyboardButton(
+                text="Гидратация",
+                callback_data="nrel_hydration"
+            )],
+
+            [InlineKeyboardButton(
+                text="Сон",
+                callback_data="define_nrel_sleep"
+            )],
+
+
+
+            [InlineKeyboardButton(
+                text="Питание",
+                callback_data="define_nrel_nutrition"
+            )],
+            
+            [InlineKeyboardButton(
+                text="Активность",
+                callback_data="define_physical_activity"
+            )],
+
+            [InlineKeyboardButton(
+                text="Гигиена",
+                callback_data="define_nrel_hygiene"
+            )],
+
+
+
+
+
+            [InlineKeyboardButton(
+                text="Психическое здоровье", 
+                callback_data="define_mental_health"
+            )]
+        ]
+    )
+
 def concept_lookup_button():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔍 Посмотреть определение", callback_data="lookup_definition")]
+        [InlineKeyboardButton(
+            text="🔍 Посмотреть определение", 
+            callback_data="show_definition_buttons"  
+        )]
     ])
