@@ -27,7 +27,7 @@ main = ReplyKeyboardMarkup(
         #  KeyboardButton(text='Добавить понятие')
         # ],
         [
-            KeyboardButton(text='о нас'),
+            # KeyboardButton(text='о нас'),
             KeyboardButton(text='о системе')
             #KeyboardButton(text='Понятия')
         ]
