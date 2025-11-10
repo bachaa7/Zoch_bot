@@ -11,6 +11,9 @@ import app.reminder_instance as reminder_instance
 
 from ostis_client import connect_to_ostis
 
+from app.rag_handlers import router as rag_router
+from app.rag_creation_handlers import router as rag_creation_router  # Новый импорт
+
 load_dotenv()
 
 async def main():
@@ -28,6 +31,8 @@ async def main():
 
     dp.include_router(main_router)
     dp.include_router(definition_router)
+    dp.include_router(rag_router)
+    dp.include_router(rag_creation_router)  # Регистрируем новый роутер
 
     # Если нужно, сохраните reminder_manager куда-то глобально или в app.reminder_instance
     # Например:

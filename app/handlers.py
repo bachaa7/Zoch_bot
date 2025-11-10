@@ -624,3 +624,23 @@ async def start_registration(message: Message, state: FSMContext):
     
     await state.set_state(RegisterStates.name)
     await message.answer("Введите ваше имя:")
+
+
+
+
+    # Добавляем в импорты
+# from app.rag_creation_handlers import router as rag_creation_router
+
+# Регистрируем роутер в main.py (будет показано ниже)
+
+# Добавляем обработчик для кнопки "Управление знаниями"
+@router.message(F.text == "📚 Управление знаниями")
+async def knowledge_management(message: Message):
+    """Управление знаниями для ИИ"""
+    await message.answer(
+        "📚 *Управление базой знаний ИИ-ассистента*\n\n"
+        "Здесь вы можете добавлять информацию, которую ИИ будет использовать "
+        "для ответов на вопросы о здоровье и образе жизни.\n\n"
+        "Выберите действие:",
+        reply_markup=kb.knowledge_management_keyboard()
+    )
