@@ -254,96 +254,96 @@ async def set_reminder_times(message: Message, state: FSMContext):
 
 
 
-@router.message(Command('registers'))
-async def register(message: Message, state: FSMContext):
-    # Проверяем регистрацию с проверкой структуры данных
-    if await UserManager.is_registered(message.from_user.id, verify_structure=True):
-        await message.answer("Вы уже зарегистрированы!")
-        return
+# @router.message(Command('registers'))
+# async def register(message: Message, state: FSMContext):
+#     # Проверяем регистрацию с проверкой структуры данных
+#     if await UserManager.is_registered(message.from_user.id):
+#         await message.answer("Вы уже зарегистрированы!")
+#         return
     
-    await state.set_state(Register.name)
-    await message.answer("Введите ваше имя:")
+#     await state.set_state(Register.name)
+#     await message.answer("Введите ваше имя:")
 
-@router.message(Register.name)
-async def register_name(message: Message, state: FSMContext):
-    if not message.text:
-        await message.answer("Пожалуйста, введите текст")
-        return
+# @router.message(Register.name)
+# async def register_name(message: Message, state: FSMContext):
+#     if not message.text:
+#         await message.answer("Пожалуйста, введите текст")
+#         return
         
-    await state.update_data(name=message.text)
-    await state.set_state(Register.age)
-    await message.answer("Введите ваш возраст:")
+#     await state.update_data(name=message.text)
+#     await state.set_state(Register.age)
+#     await message.answer("Введите ваш возраст:")
 
-@router.message(Register.age)
-async def register_age(message: Message, state: FSMContext):
-    if not message.text:
-        await message.answer("Пожалуйста, введите текст")
-        return
+# @router.message(Register.age)
+# async def register_age(message: Message, state: FSMContext):
+#     if not message.text:
+#         await message.answer("Пожалуйста, введите текст")
+#         return
         
-    await state.update_data(age=message.text)
-    await state.set_state(Register.number)
-    await message.answer("Отправьте ваш номер телефона:", reply_markup=kb.get_number)
+#     await state.update_data(age=message.text)
+#     await state.set_state(Register.number)
+#     await message.answer("Отправьте ваш номер телефона:", reply_markup=kb.get_number)
 
-@router.message(Register.number, F.contact)
-async def register_number(message: Message, state: FSMContext):
-    data = await state.get_data()
-    phone = message.contact.phone_number
+# @router.message(Register.number, F.contact)
+# async def register_number(message: Message, state: FSMContext):
+#     data = await state.get_data()
+#     phone = message.contact.phone_number
     
-    # Формируем данные для сохранения
-    user_data = {
-        'name': data.get('name'),
-        'age': data.get('age'),
-        'phone': phone
-    }
+#     # Формируем данные для сохранения
+#     user_data = {
+#         'name': data.get('name'),
+#         'age': data.get('age'),
+#         'phone': phone
+#     }
     
-    # Создаем пользователя через UserManager
-    if await UserManager.create_user(message.from_user.id, user_data):
-        await message.answer(
-            f"✅ Регистрация завершена!\n"
-            f"Имя: {user_data['name']}\n"
-            f"Возраст: {user_data['age']}\n"
-            f"Телефон: {user_data['phone']}",
-            reply_markup=kb.remove()  # Убираем клавиатуру
-        )
-    else:
-        await message.answer(
-            "❌ Не удалось сохранить данные. Попробуйте позже",
-            reply_markup=kb.remove()
-        )
+#     # Создаем пользователя через UserManager
+#     if await UserManager.create_user(message.from_user.id, user_data):
+#         await message.answer(
+#             f"✅ Регистрация завершена!\n"
+#             f"Имя: {user_data['name']}\n"
+#             f"Возраст: {user_data['age']}\n"
+#             f"Телефон: {user_data['phone']}",
+#             reply_markup=kb.remove()  # Убираем клавиатуру
+#         )
+#     else:
+#         await message.answer(
+#             "❌ Не удалось сохранить данные. Попробуйте позже",
+#             reply_markup=kb.remove()
+#         )
     
-    await state.clear()
+#     await state.clear()
 
 
 
-#####################################################################################
-@router.message(Command('profile'))
-async def show_profile(message: Message):
-    # Проверяем регистрацию с проверкой структуры
-    if not await UserManager.is_registered(message.from_user.id, verify_structure=True):
-        await message.answer("Сначала зарегистрируйтесь через /register")
-        return
+# #####################################################################################
+# @router.message(Command('profile'))
+# async def show_profile(message: Message):
+#     # Проверяем регистрацию с проверкой структуры
+#     if not await UserManager.is_registered(message.from_user.id):
+#         await message.answer("Сначала зарегистрируйтесь через /register")
+#         return
     
-    # Получаем данные через UserManager
-    user_data = await UserManager.get_user_data(message.from_user.id)
+#     # Получаем данные через UserManager
+#     user_data = await UserManager.get_user_data(message.from_user.id)
     
-    if not user_data:
-        await message.answer("❌ Не удалось загрузить данные профиля")
-        return
+#     if not user_data:
+#         await message.answer("❌ Не удалось загрузить данные профиля")
+#         return
         
-    await message.answer(
-        f"📌 Ваш профиль:\n"
-        f"Имя: {user_data.get('name', 'не указано')}\n"
-        f"Возраст: {user_data.get('age', 'не указан')}\n"
-        f"Телефон: {user_data.get('phone', 'не указан')}"
-    )
+#     await message.answer(
+#         f"📌 Ваш профиль:\n"
+#         f"Имя: {user_data.get('name', 'не указано')}\n"
+#         f"Возраст: {user_data.get('age', 'не указан')}\n"
+#         f"Телефон: {user_data.get('phone', 'не указан')}"
+#     )
 
-@router.message(Command('delete_me'))
-async def delete_profile(message: Message):
-    if await UserManager.delete_user(message.from_user.id):
-        await message.answer("✅ Ваш профиль удален")
-    else:
-        await message.answer("❌ Не удалось удалить профиль")
-#######################################################################################
+# @router.message(Command('delete_me'))
+# async def delete_profile(message: Message):
+#     if await UserManager.delete_user(message.from_user.id):
+#         await message.answer("✅ Ваш профиль удален")
+#     else:
+#         await message.answer("❌ Не удалось удалить профиль")
+# #######################################################################################
 
 
 
@@ -515,20 +515,9 @@ class RegisterStates(StatesGroup):
     age = State()
     phone = State()
 
-# @router.message(Command("vika"))
-# async def cmd_start(message: Message):
-#     await message.answer(
-#         "Привет! Я бот для регистрации.\n"
-#         "Используй команды:\n"
-#         "/register - регистрация\n"
-#         "/profile - просмотр профиля\n"
-#         "/delete_me - удалить данные",
-#         reply_markup=ReplyKeyboardRemove()
-#     )
 
 @router.message(Command("register"))
 async def start_registration(message: Message, state: FSMContext):
-    # Убрал параметр verify_structure
     # if await UserManager.is_registered(message.from_user.id):
     #     await message.answer("Вы уже зарегистрированы! Используйте /profile")
     #     return
@@ -612,18 +601,18 @@ async def delete_profile(message: Message):
 
         
 
-@router.message(Command("register"))
-async def start_registration(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    print(f"DEBUG: User ID from message: {user_id}")
-    print(f"DEBUG: User first name: {message.from_user.first_name}")
+# @router.message(Command("register"))
+# async def start_registration(message: Message, state: FSMContext):
+#     user_id = message.from_user.id
+#     print(f"DEBUG: User ID from message: {user_id}")
+#     print(f"DEBUG: User first name: {message.from_user.first_name}")
     
-    if await UserManager.is_registered(user_id):
-        await message.answer("Вы уже зарегистрированы! Используйте /profile")
-        return
+#     if await UserManager.is_registered(user_id):
+#         await message.answer("Вы уже зарегистрированы! Используйте /profile")
+#         return
     
-    await state.set_state(RegisterStates.name)
-    await message.answer("Введите ваше имя:")
+#     await state.set_state(RegisterStates.name)
+#     await message.answer("Введите ваше имя:")
 
 
 

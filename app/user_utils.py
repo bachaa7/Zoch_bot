@@ -109,35 +109,42 @@ class UserManager:
                 logger.info(f"Пользователь {user_id} не найден для удаления")
                 return True
 
-            elements_to_delete = [user_node]
+            elements_to_delete = []
+            
+            # Добавляем основной узел пользователя
+            elements_to_delete.append(user_node)
+            
+            # Добавляем связанные узлы отношений
             relations = ["nrel_name", "nrel_age", "nrel_phone"]
-
             for rel in relations:
-                rel_node_idtf = f"{rel}_{user_id}"
-                rel_node = ScKeynodes.resolve(rel_node_idtf, sc_types.NODE_CONST_ROLE)
-                if not rel_node.is_valid():
-                    continue
+                rel_node = ScKeynodes.resolve(f"{rel}_{user_id}", sc_types.NODE_CONST_ROLE)
+                if rel_node.is_valid():
+                    elements_to_delete.append(rel_node)
+            
+            # Ищем связанные ссылки через шаблон
+            template = ScTemplate()
+            template.triple_with_relation(
+                user_node,
+                sc_types.EDGE_D_COMMON_VAR,
+                sc_types.LINK_VAR,
+                sc_types.EDGE_ACCESS_VAR_POS_PERM,
+                sc_types.NODE_VAR_ROLE
+            )
+            
+            results = template_search(template)
+            for result in results:
+                # Добавляем все элементы из результата поиска
+                for element in result.values():
+                    if element and element.is_valid():
+                        elements_to_delete.append(element)
 
-                # Ищем связанные элементы
-                template = ScTemplate()
-                template.triple(
-                    user_node,
-                    sc_types.EDGE_D_COMMON_VAR,
-                    [sc_types.LINK_VAR, "_link"]
-                )
+            # Удаляем все найденные элементы
+            if elements_to_delete:
+                delete_elements(*elements_to_delete)
+                logger.info(f"Пользователь {user_id} удален. Удалено элементов: {len(elements_to_delete)}")
+            else:
+                logger.info(f"Пользователь {user_id} не найден для удаления")
                 
-                results = template_search(template)
-                if results:
-                    for result in results:
-                        if "_link" in result:
-                            elements_to_delete.extend([
-                                result.get("_edge"),
-                                result["_link"],
-                                rel_node
-                            ])
-
-            delete_elements(*elements_to_delete)
-            logger.info(f"Пользователь {user_id} удален")
             return True
             
         except Exception as e:
@@ -179,25 +186,28 @@ class UserManager:
             }
 
             for sc_rel, data_key in relations.items():
-                rel_node_idtf = f"{sc_rel}_{user_id}"
-                rel_node = ScKeynodes.resolve(rel_node_idtf, sc_types.NODE_CONST_ROLE)
+                rel_node = ScKeynodes.resolve(f"{sc_rel}_{user_id}", sc_types.NODE_CONST_ROLE)
                 if not rel_node.is_valid():
                     continue
 
+                # Ищем связь: user_node -> link (через rel_node)
                 template = ScTemplate()
-                template.triple(
+                template.triple_with_relation(
                     user_node,
                     sc_types.EDGE_D_COMMON_VAR,
-                    [sc_types.LINK_VAR, "_link"]
+                    sc_types.LINK_VAR,
+                    sc_types.EDGE_ACCESS_VAR_POS_PERM,
+                    rel_node
                 )
                 
                 results = template_search(template)
                 if results:
                     for result in results:
-                        if "_link" in result:
-                            content = get_link_content_data(result["_link"])
+                        link_addr = result.get(2)  # LINK_VAR
+                        if link_addr and link_addr.is_valid():
+                            content = get_link_content_data(link_addr)
                             if content:
-                                data[data_key] = content.data
+                                data[data_key] = str(content)  # Просто преобразуем в строку
                                 break
 
             logger.info(f"Данные пользователя {user_id}: {data}")
