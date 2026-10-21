@@ -1,3 +1,5 @@
 py-sc-client/
 get_function
 .env
+.venv/
+__pycache__/
